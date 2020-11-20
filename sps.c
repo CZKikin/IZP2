@@ -94,7 +94,7 @@ getargs(int *count, char **args){
 
 Status
 separateCmds(char *arg){
-    command c; Status result;
+    command c; Status result = UnexpectedErr;
     char *sel = strtok(arg, ";");
     char *cmd = strtok(arg, ";");
 
