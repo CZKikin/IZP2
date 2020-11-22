@@ -4,8 +4,7 @@
 #include <string.h>
 #include <getopt.h>
 
-//TODO: Naprogramovat find_function(); Zase bude vracet pointer na fci ktera se bude spoustet
-
+/* Definitions */
 typedef enum {
     UnexpectedErr = -1,
     Ok,
@@ -20,31 +19,33 @@ typedef struct{
     char **args;
 }command;
 
+typedef struct{
+   char **array;
+   int size;
+} argsArray;
+
 char delim = ' ';
-command **cmds = NULL;
-int cmdsCount;
+argsArray argsArr;
 FILE *filePtr;
 
+/* Prototypes */
+void initCommand(command *c);
+void delCmd(command *c);
+void printUsage();
+Status getArgs(int count, char **args);
+Status processArg(char *arg);
+
+/* Code */
+void
+initArgsArray(argsArray *a){
+    a->array=NULL;
+    a->size=0;
+}
 void
 initCommad(command *c){
     c->selector=NULL;
     c->function=NULL;
     c->args=NULL;
-}
-
-Status
-addToCmd(command *c, char *sel, char* fncWithArg){
-    asprintf(c->selector,"%s",sel);
-    if (c->selector == NULL)
-        return AllocErr;
-
-    char *function = strtok(fncWithArg," "); 
-
-    if (c->function = find_function(function) == NULL)
-        return AllocErr;
-
-    c->args = fncWithArg;
-    return Ok;
 }
 
 void
@@ -59,28 +60,30 @@ printUsage(){
 }
 
 Status
-addCmdToAray(command *c, int index){
-    realloc(cmds, (index+1)*sizeof(c));
-    if (cmds == NULL)
-        return AllocErr;
+processRemainingArguments(int count, char **args){
+        initArgsArray(&argsArr);
+        argsArr.array = malloc(count * sizeof(void*));
+        if (argsArr.array == NULL)
+            return AllocErr;
 
-    cmds[index] = c;
-    cmdsCount++;
-    return Ok;
+        for (int i = optind, j = 0; i<count; i++,j++){
+            asprintf(&argsArr.array[j], "%s", args[i]);
+            if(argsArr.array[j] == NULL)
+                return AllocErr;
+            argsArr.size++;
+        }
+
+        return Ok;
 }
 
 Status
-getargs(int *count, char **args){
+getArgs(int count, char **args){
     int opt; Status result = UnexpectedErr;
 
-    while ((opt = getopt(*count, args, "d:")) != -1 ){
+    while ((opt = getopt(count, args, "d:")) != -1 ){
         switch(opt){
             case 'd':
                 delim=optarg[0];
-                break;
-
-            case '?':
-                result = processArgs(args[optopt]);
                 break;
 
             default:
@@ -89,60 +92,34 @@ getargs(int *count, char **args){
                 break;
         }
     }
-    return result;
-}
-
-Status
-separateCmds(char *arg){
-    command c; Status result;
-    char *sel = strtok(arg, ";");
-    char *cmd = strtok(arg, ";");
-
-    for(int i=0; sel != NULL || cmd != NULL; i++){
-        initCmd(&c);
-        result = addToCmd(&c,sel,cmd);
-        if (result != Ok)
-            return ArgErr;
-
-        result = addCmdToArray(&c, i);
-        if (result != Ok)
-            return ArgErr;
-
-        sel = strtok(arg, ";");
-        cmd = strtok(arg, ";");
+    if(optind < count){
+        result = processRemainingArguments(count, args);
     }
     return result;
-}
-
-Status
-processArgs(char *arg){
-    if (arg[0] == '['){
-        separateCmds(arg);
-    } else {
-       filePtr = fopen (arg,"r+"); 
-       if (filePtr == NULL)
-           return FileErr;
-    }
-
-    return Ok;
 }
 
 void
+delArgsArray(){
+    for (int i = 0; i<argsArr.size; i++){
+        free(argsArr.array[i]);
+        argsArr.size--;
+    }
+}
+void
 cleanUp(){
-    for (int i=0; i<cmdscount; i++)
-        delCmd(cmds[i]);
+    delArgsArray();
+    free(argsArr.array);
 }
 
 int
 main(int argc, char **argv){
     Status result = UnexpectedErr;
-    result = getargs(&argc, argv);
-    if (result != Ok){
-        if (cmds != NULL)
-            cleanUp();
+    if((result = getArgs(argc, argv)) != Ok)
         return result; 
-    }
-
     
+    for (int i= 0; i<argsArr.size; i++)
+        printf("%s\n\r", argsArr.array[i]);
+
+    cleanUp();
     return result;
 }

@@ -4,4 +4,4 @@ sps: sps.c
 	$(CC) $(CFLAGS) -o sps	
 
 debug:
-	$(CC) $(CFLAGS) -g3 sps
+	$(CC) $(CFLAGS) -g3 -o sps
