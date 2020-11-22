@@ -5,3 +5,6 @@ sps: sps.c
 
 debug:
 	$(CC) $(CFLAGS) -g3 -o sps
+
+clean:
+	rm sps
