@@ -4,6 +4,12 @@
 #include <string.h>
 #include <getopt.h>
 
+#ifdef DEBUG
+#define dp(fmt, args...) (printf("%s:%s:%d "fmt, __FILE__, __FUNCTION__, __LINE__, args))
+#else
+#define dp(fmt, args...) 
+#endif
+
 /* Definitions */
 typedef enum {
     Ok = 0,
@@ -23,10 +29,10 @@ typedef struct{
 void initArgsArray(argsArray *a);
 void printUsage();
 Status processRemainingArgs(int count, char **args, argsArray *argsA);
-Status getArgs(int count, char **args, argsArray *array, char *delim);
+Status getArgs(int count, char **args, argsArray *array, char **delim);
 Status openFile(argsArray *Arr, FILE **fp);
 void delArgsArray();
-void cleanUp(argsArray *a);
+void cleanUp(argsArray *a, char *delim);
 
 /* Code */
 void
@@ -62,13 +68,15 @@ processRemainingArgs(int count, char **args, argsArray *argsA){
         return Ok;
 }
 Status
-getArgs(int count, char **args, argsArray *array, char *delim){
+getArgs(int count, char **args, argsArray *array, char **delim){
     int opt; Status result = UnexpectedErr;
 
     while ((opt = getopt(count, args, "d:")) != -1 ){
         switch(opt){
             case 'd':
-                *delim = optarg[0];
+                asprintf(delim, "%s", optarg);
+                if (delim == NULL)
+                    return AllocErr;
                 break;
 
             default:
@@ -77,16 +85,25 @@ getArgs(int count, char **args, argsArray *array, char *delim){
                 break;
         }
     }
+
+    if (*delim == NULL){
+        asprintf(delim, "%s", " ");
+        if (*delim==NULL)
+            return AllocErr;
+    }
+
     if(optind < count){
         result = processRemainingArgs(count, args, array);
     } else {
         result = ArgErr;
     }
+    
     return result;
 }
 Status
 openFile(argsArray *Arr, FILE **fp){
 
+    dp("Trying to open: %s\n", Arr->array[1]);
     *fp = fopen(Arr->array[1], "r+");
     if (*fp == NULL)
         return FileErr;
@@ -109,33 +126,34 @@ delArgsArray(argsArray *a){
     a->array=NULL;
 }
 void
-cleanUp(argsArray *a){
+cleanUp(argsArray *a, char *delim){
     delArgsArray(a);
+    free(delim);
+    delim = NULL;
 }
 int
 main(int argc, char **argv){
-    char delim = ' '; FILE *filePtr = NULL; 
+    char *delim = NULL; FILE *filePtr = NULL; 
     Status result = UnexpectedErr;
     argsArray argsArr;
 
     initArgsArray(&argsArr);
 
     if((result = getArgs(argc, argv, &argsArr, &delim)) != Ok){
-        cleanUp(&argsArr);
+        cleanUp(&argsArr, delim);
         return result; 
     }
+
+    dp("delims: \"%s\"\n", delim);
    
     if((result = openFile(&argsArr, &filePtr)) != Ok){
-        cleanUp(&argsArr);
+        cleanUp(&argsArr, delim);
         return result;
     }
-
-    //Do stuff
-
 
     if (fclose(filePtr) != 0)
         return FileErr;
 
-    cleanUp(&argsArr);
+    cleanUp(&argsArr, delim);
     return result;
 }
