@@ -14,12 +14,6 @@ typedef enum {
 } Status;
 
 typedef struct{
-    char **selector;
-    Status (*function)();
-    char **args;
-}command;
-
-typedef struct{
    char **array;
    int size;
 } argsArray;
@@ -27,13 +21,12 @@ typedef struct{
 
 /* Prototypes */
 void initArgsArray(argsArray *a);
-void initCommand(command *c);
-void delCmd(command *c);
 void printUsage();
 Status processRemainingArgs(int count, char **args, argsArray *argsA);
 Status getArgs(int count, char **args, argsArray *array, char *delim);
-void cleanUp(argsArray *a);
+Status openFile(argsArray *Arr, FILE **fp);
 void delArgsArray();
+void cleanUp(argsArray *a);
 
 /* Code */
 void
@@ -42,27 +35,11 @@ initArgsArray(argsArray *a){
     a->size=0;
 }
 void
-initCommad(command *c){
-    c->selector=NULL;
-    c->function=NULL;
-    c->args=NULL;
-}
-void
-delCmd(command *c){
-    free(c->selector);
-    c->selector = NULL;
-
-    free(c->args);
-    c->args = NULL;
-}
-void
 printUsage(){
     printf("./sps [-d DELIM] CMD_SEQUENCE FILE\n\r");
 }
 Status
 processRemainingArgs(int count, char **args, argsArray *argsA){
-        initArgsArray(argsA);
-
         argsA->array = malloc(count * sizeof(void*));
 
         if (argsA->array == NULL)
@@ -107,6 +84,19 @@ getArgs(int count, char **args, argsArray *array, char *delim){
     }
     return result;
 }
+Status
+openFile(argsArray *Arr, FILE **fp){
+
+    *fp = fopen(Arr->array[1], "r+");
+    if (*fp == NULL)
+        return FileErr;
+    
+    free(Arr->array[1]);
+    Arr->array[1] = NULL;
+    Arr->size--;
+
+    return Ok;
+}
 void
 delArgsArray(argsArray *a){
     for (int i = 0; i<a->size; i++){
@@ -114,28 +104,38 @@ delArgsArray(argsArray *a){
         a->array[i] = NULL;
     }
     a->size=0;
+
+    free(a->array);
+    a->array=NULL;
 }
 void
 cleanUp(argsArray *a){
-    if(a->array != NULL){
-        delArgsArray(a);
-        free(a->array);
-        a->array=NULL;
-    }
+    delArgsArray(a);
 }
 int
 main(int argc, char **argv){
-    char delim = ' '; FILE *filePtr; 
+    char delim = ' '; FILE *filePtr = NULL; 
     Status result = UnexpectedErr;
     argsArray argsArr;
+
     initArgsArray(&argsArr);
+
     if((result = getArgs(argc, argv, &argsArr, &delim)) != Ok){
         cleanUp(&argsArr);
         return result; 
     }
-    
-    (void)delim;
-    (void)filePtr;
+   
+    if((result = openFile(&argsArr, &filePtr)) != Ok){
+        cleanUp(&argsArr);
+        return result;
+    }
+
+    //Do stuff
+
+
+    if (fclose(filePtr) != 0)
+        return FileErr;
+
     cleanUp(&argsArr);
     return result;
 }
