@@ -6,8 +6,8 @@
 
 /* Definitions */
 typedef enum {
-    UnexpectedErr = -1,
-    Ok,
+    Ok = 0,
+    UnexpectedErr,
     ArgErr,
     AllocErr,
     FileErr
@@ -24,16 +24,14 @@ typedef struct{
    int size;
 } argsArray;
 
-char delim = ' ';
-FILE *filePtr;
 
 /* Prototypes */
+void initArgsArray(argsArray *a);
 void initCommand(command *c);
 void delCmd(command *c);
 void printUsage();
-Status getArgs(int count, char **args, argsArray *array);
-Status processArg(char *arg);
-void initArgsArray(argsArray *a);
+Status processRemainingArgs(int count, char **args, argsArray *argsA);
+Status getArgs(int count, char **args, argsArray *array, char *delim);
 void cleanUp(argsArray *a);
 void delArgsArray();
 
@@ -62,7 +60,7 @@ printUsage(){
     printf("./sps [-d DELIM] CMD_SEQUENCE FILE\n\r");
 }
 Status
-processRemainingArguments(int count, char **args, argsArray *argsA){
+processRemainingArgs(int count, char **args, argsArray *argsA){
         initArgsArray(argsA);
 
         argsA->array = malloc(count * sizeof(void*));
@@ -87,13 +85,13 @@ processRemainingArguments(int count, char **args, argsArray *argsA){
         return Ok;
 }
 Status
-getArgs(int count, char **args, argsArray *array){
+getArgs(int count, char **args, argsArray *array, char *delim){
     int opt; Status result = UnexpectedErr;
 
     while ((opt = getopt(count, args, "d:")) != -1 ){
         switch(opt){
             case 'd':
-                delim=optarg[0];
+                *delim = optarg[0];
                 break;
 
             default:
@@ -103,7 +101,9 @@ getArgs(int count, char **args, argsArray *array){
         }
     }
     if(optind < count){
-        result = processRemainingArguments(count, args, array);
+        result = processRemainingArgs(count, args, array);
+    } else {
+        result = ArgErr;
     }
     return result;
 }
@@ -117,19 +117,25 @@ delArgsArray(argsArray *a){
 }
 void
 cleanUp(argsArray *a){
-    delArgsArray(a);
-    free(a->array);
-    a->array=NULL;
+    if(a->array != NULL){
+        delArgsArray(a);
+        free(a->array);
+        a->array=NULL;
+    }
 }
 int
 main(int argc, char **argv){
+    char delim = ' '; FILE *filePtr; 
     Status result = UnexpectedErr;
     argsArray argsArr;
-    if((result = getArgs(argc, argv, &argsArr)) != Ok){
+    initArgsArray(&argsArr);
+    if((result = getArgs(argc, argv, &argsArr, &delim)) != Ok){
         cleanUp(&argsArr);
         return result; 
     }
-
+    
+    (void)delim;
+    (void)filePtr;
     cleanUp(&argsArr);
     return result;
 }

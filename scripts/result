@@ -1,7 +1,8 @@
 #!/bin/bash
 case $1 in
--1) echo UnexpectedErr;;
-1) echo ArgErr;;
-2) echo AlocErr;;
-3) echo FileErr;;
+0) echo AllOk;;
+1) echo UnexpectedErr;;
+2) echo ArgErr;;
+3) echo AlocErr;;
+4) echo FileErr;;
 esac
