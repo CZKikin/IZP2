@@ -4,7 +4,7 @@ sps: sps.c
 	$(CC) $(CFLAGS) -o sps
 
 debug:
-	$(CC) $(CFLAGS) -g3 -D DEBUG -o sps
+	$(CC) $(CFLAGS) -ggdb3 -D DEBUG -o sps
 
 clean:
 	rm sps
