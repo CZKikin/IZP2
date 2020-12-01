@@ -9,7 +9,6 @@
 #else
 #define dp(fmt, args...) 
 #endif
-// TODO: Naprogramovat vlastní asprintf - na merlinovi to nejde buildnout!!
 
 /* Definitions */
 typedef enum {
@@ -82,7 +81,10 @@ delCell(cell *c){
 }
 Status
 initCellData(cell *c){
-   asprintf(&c->data, "%s", ""); 
+   // asprintf(&c->data, "%s", ""); because school :)
+   c->data = malloc(sizeof(char));
+   snprintf(c->data, 1, "%s", "");
+
    if (c->data == NULL)
        return AllocErr;
    return Ok;
@@ -161,7 +163,11 @@ processRemainingArgs(int count, char **args, argsArray *argsA){
             return AllocErr;
 
         for (int i = optind, j = 0; i<count; i++,j++){
-            asprintf(&argsA->array[j], "%s", args[i]);
+            //asprintf(&argsA->array[j], "%s", args[i]); because school
+            dp("Argument: %s\n", args[i]);
+            argsA->array[j] = NULL;
+            argsA->array[j] = realloc(argsA->array[j], (strlen(args[i])+2)*sizeof(char));
+            snprintf(argsA->array[j], strlen(args[i])+1, "%s", args[i]);
 
             if(argsA->array[j] == NULL)
                 return AllocErr;
@@ -183,7 +189,10 @@ getArgs(int count, char **args, argsArray *array, char **delim){
     while ((opt = getopt(count, args, "d:")) != -1 ){
         switch(opt){
             case 'd':
-                asprintf(delim, "%s", optarg);
+                //asprintf(delim, "%s", optarg); because school
+                *delim = realloc(*delim, (strlen(optarg)+2)*sizeof(char));
+                snprintf(*delim, strlen(optarg)+1, "%s", optarg);
+
                 if (delim == NULL)
                     return AllocErr;
                 break;
@@ -196,7 +205,10 @@ getArgs(int count, char **args, argsArray *array, char **delim){
     }
 
     if (*delim == NULL){
-        asprintf(delim, "%s", " ");
+        //asprintf(delim, "%s", " "); beacuse school 
+        *delim = realloc(*delim, 2*sizeof(char));
+        sprintf(*delim, "%s", " ");
+ 
         if (*delim==NULL)
             return AllocErr;
     }
@@ -227,9 +239,7 @@ Status
 setupCell(cell *c, int col, int row){
     Status result = UnexpectedErr;
     initCell(c);
-    dp("cell: row=> %d, col=>%d, data=\"%s\", size=%d\n", c->row, c->col, c->data, c->size);
     result = initCellData(c);
-    dp("init cellData: row=> %d, col=>%d, data=\"%s\", size=%d\n", c->row, c->col, c->data, c->size);
     setCellCords(c, col, row);
     return result;
 }
@@ -243,7 +253,6 @@ readFile(FILE *fp, char *delim, table *t){
     setupCell(&c, cols, rows); 
 
     while ((ch = fgetc(fp)) != EOF){
-        dp("char = %c\n", ch);
         if (isDelim(ch, delim)){
             dp("Insering cell: row=> %d, col=>%d, data=%s, size=%d\n", c.row, c.col, c.data, c.size);
             result = insToTable(t, &c);
@@ -276,7 +285,8 @@ readFile(FILE *fp, char *delim, table *t){
         }
 
     }
-        
+    
+    delCell(&c);
     return result;
 }
 void
