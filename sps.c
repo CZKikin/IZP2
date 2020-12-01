@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#define _GNU_SOURCE
+//#define _GNU_SOURCE because school :)
 #include <stdio.h>
 #include <string.h>
 #include <getopt.h>
@@ -42,7 +42,6 @@ void initCell(cell *c);
 void delCell(cell *c);
 Status initCellData(cell *c);
 Status insToCell(cell *c, char ch);
-// void changeCellPos(cell *c, int col, int row); //TODO: -1 as param means do not chage
 void initTable(table *t);
 void delTable(table *t);
 void setCellCords(cell *c, int col, int row);
@@ -56,6 +55,7 @@ Status getArgs(int count, char **args, argsArray *array, char **delim);
 Status openFile(argsArray *Arr, FILE **fp);
 Status readFile(FILE *fp, char *delim, table *t);
 void cleanUp(argsArray *a, char *delim, table *t);
+void DEBUGprintTable(table *t, char *delims);
 
 /* Code */
 char
@@ -296,6 +296,20 @@ cleanUp(argsArray *a, char *delim, table *t){
     free(delim);
     delim = NULL;
 }
+void
+DEBUGprintTable(table *t, char *delims){
+    int row = 1;
+    printf("TABLE START=======\n");
+    for(int i=0; i<t->size; i++){
+        if(t->table[i].row>row){
+            row++;
+            printf("%s\n",t->table[i].data);
+        } else {
+            printf("%s%s",t->table[i].data,delims);
+        }
+    }
+    printf("\nTABLE END========\n");
+}
 int
 main(int argc, char **argv){
     char *delim = NULL; FILE *filePtr = NULL; 
@@ -324,6 +338,8 @@ main(int argc, char **argv){
         cleanUp(&argsArr, delim, &table);
         return result;
     }
+
+   DEBUGprintTable(&table, delim); 
 
     if (fclose(filePtr) != 0){
         cleanUp(&argsArr, delim, &table);
