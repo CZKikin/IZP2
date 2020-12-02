@@ -10,14 +10,24 @@
 #define dp(fmt, args...) 
 #endif
 
+#define CMDLEN (1001)
+#define CMDCOUNT (1000)
+
 /* Definitions */
 typedef enum {
     Ok = 0,
     UnexpectedErr,
     ArgErr,
     AllocErr,
-    FileErr
+    FileErr,
+    CmdErr,
+    EndReached
 } Status;
+
+typedef enum {
+    Command = 0,
+    Select
+} command;
 
 typedef struct {
    char **array;
@@ -54,8 +64,10 @@ Status processRemainingArgs(int count, char **args, argsArray *argsA);
 Status getArgs(int count, char **args, argsArray *array, char **delim);
 Status openFile(argsArray *Arr, FILE **fp);
 Status readFile(FILE *fp, char *delim, table *t);
-void cleanUp(argsArray *a, char *delim, table *t);
+void cleanUp(argsArray *a, char *delim, table *t, char *cmd);
 void DEBUGprintTable(table *t, char *delims);
+Status delCmdFromArgs(int index, argsArray *a);
+Status getCmd(char **dst, command *dstT, argsArray *a);
 
 /* Code */
 char
@@ -81,13 +93,14 @@ delCell(cell *c){
 }
 Status
 initCellData(cell *c){
-   // asprintf(&c->data, "%s", ""); because school :)
-   c->data = malloc(sizeof(char));
-   snprintf(c->data, 1, "%s", "");
-
-   if (c->data == NULL)
+    // asprintf(&c->data, "%s", ""); because school :)
+    c->data = malloc(sizeof(char));
+    if (c->data == NULL)
        return AllocErr;
-   return Ok;
+
+    snprintf(c->data, 1, "%s", "");
+
+    return Ok;
 }
 Status
 insToCell(cell *c, char ch){
@@ -166,11 +179,14 @@ processRemainingArgs(int count, char **args, argsArray *argsA){
             //asprintf(&argsA->array[j], "%s", args[i]); because school
             dp("Argument: %s\n", args[i]);
             argsA->array[j] = NULL;
-            argsA->array[j] = realloc(argsA->array[j], (strlen(args[i])+2)*sizeof(char));
-            snprintf(argsA->array[j], strlen(args[i])+1, "%s", args[i]);
 
+            argsA->array[j] = realloc(argsA->array[j], (strlen(args[i])+1)*sizeof(char));
             if(argsA->array[j] == NULL)
                 return AllocErr;
+
+            memset(argsA->array[j],0,strlen(args[i]+1));
+
+            snprintf(argsA->array[j], strlen(args[i])+1, "%s", args[i]);
 
             argsA->size++;
         }
@@ -190,11 +206,11 @@ getArgs(int count, char **args, argsArray *array, char **delim){
         switch(opt){
             case 'd':
                 //asprintf(delim, "%s", optarg); because school
-                *delim = realloc(*delim, (strlen(optarg)+2)*sizeof(char));
-                snprintf(*delim, strlen(optarg)+1, "%s", optarg);
-
+                *delim = realloc(*delim, (strlen(optarg)+1)*sizeof(char)); //IN CASE OF SEGFAULT VRAT strlen + 2 :)
                 if (delim == NULL)
-                    return AllocErr;
+                    return AllocErr;   
+
+                snprintf(*delim, strlen(optarg)+1, "%s", optarg);
                 break;
 
             default:
@@ -207,10 +223,11 @@ getArgs(int count, char **args, argsArray *array, char **delim){
     if (*delim == NULL){
         //asprintf(delim, "%s", " "); beacuse school 
         *delim = realloc(*delim, 2*sizeof(char));
-        sprintf(*delim, "%s", " ");
- 
         if (*delim==NULL)
             return AllocErr;
+
+        sprintf(*delim, "%s", " ");
+ 
     }
 
     if(optind < count){
@@ -252,7 +269,8 @@ readFile(FILE *fp, char *delim, table *t){
 
     setupCell(&c, cols, rows); 
 
-    while ((ch = fgetc(fp)) != EOF){
+    while (!feof(fp)){
+        ch = fgetc(fp);
         if (isDelim(ch, delim)){
             dp("Insering cell: row=> %d, col=>%d, data=%s, size=%d\n", c.row, c.col, c.data, c.size);
             result = insToTable(t, &c);
@@ -290,11 +308,13 @@ readFile(FILE *fp, char *delim, table *t){
     return result;
 }
 void
-cleanUp(argsArray *a, char *delim, table *t){
+cleanUp(argsArray *a, char *delim, table *t, char *cmd){
     delArgsArray(a);
     delTable(t);
     free(delim);
     delim = NULL;
+    free(cmd);
+    cmd = NULL;
 }
 void
 DEBUGprintTable(table *t, char *delims){
@@ -310,9 +330,75 @@ DEBUGprintTable(table *t, char *delims){
     }
     printf("\nTABLE END========\n");
 }
+Status
+delCmdFromArgs(int index, argsArray *a){
+    char *copy=NULL;
+    copy=malloc((strlen(a->array[0])+1)*sizeof(char));
+
+    if (copy == NULL)
+        return AllocErr;
+
+    memset(copy, 0, strlen(a->array[0]+1));
+    for (int i=0, j=0; i<(int)strlen(a->array[0])+1; i++){
+        if(i>index){
+            copy[j] = a->array[0][i];
+            j++;
+        }
+    }
+    a->array[0] = realloc(a->array[0], (strlen(copy)+1)*sizeof(char));
+    if (a->array==NULL)
+        return AllocErr;
+    memset(a->array[0], 0, strlen(copy)+1);
+    strncpy(a->array[0], copy, strlen(copy)); 
+
+    free(copy);
+    copy=NULL;
+
+    return Ok;
+}
+Status
+getCmd(char **dst, command *dstT, argsArray *a){
+    Status result = UnexpectedErr;
+    char command[CMDLEN];
+    int delIndex;
+
+    memset(command, 0, CMDLEN);
+    free(*dst);
+    *dst = NULL;
+
+    for (int i = 0; a->array[0][i] != ';' && a->array[0][i] != '\0'; i++){
+        if (i == (CMDLEN-1))
+            return ArgErr;
+        command[i] = a->array[0][i]; 
+        delIndex = i;
+    }
+
+    delIndex++;
+    result = delCmdFromArgs(delIndex, a);
+
+    //asprintf(dst, "%s", command); because school :)
+    *dst = realloc(*dst, (strlen(command)+1)*sizeof(char));
+
+    if(*dst == NULL)
+        return AllocErr;
+
+    memset(*dst, 0, strlen(command)+1);
+    snprintf(*dst, strlen(command)+1, "%s", command);
+
+    if (command[0] == '[')
+        *dstT = Select;
+    else
+        *dstT = Command;
+
+    if (a->array[0][0] == '\0')
+        result = EndReached;
+
+    return result;
+}
 int
 main(int argc, char **argv){
     char *delim = NULL; FILE *filePtr = NULL; 
+    char *cmd = NULL; command type;
     Status result = UnexpectedErr;
     argsArray argsArr;
     table table;
@@ -323,29 +409,33 @@ main(int argc, char **argv){
     dp("table: table=>0x%p, size=>%d\n", table.table, table.size);
 
     if((result = getArgs(argc, argv, &argsArr, &delim)) != Ok){
-        cleanUp(&argsArr, delim, &table);
+        cleanUp(&argsArr, delim, &table, cmd);
         return result; 
     }
 
     dp("delims: \"%s\"\n", delim);
    
     if((result = openFile(&argsArr, &filePtr)) != Ok){
-        cleanUp(&argsArr, delim, &table);
+        cleanUp(&argsArr, delim, &table, cmd);
         return result;
     }
     
     if((result = readFile(filePtr, delim, &table)) != Ok){
-        cleanUp(&argsArr, delim, &table);
+        cleanUp(&argsArr, delim, &table, cmd);
         return result;
     }
 
-   DEBUGprintTable(&table, delim); 
+    DEBUGprintTable(&table, delim); 
+    dp("Commands: %s\n", argsArr.array[0]);
+    while ((result = getCmd(&cmd, &type, &argsArr)) != EndReached && result == Ok){
+        dp("Chosen command: %s\n", cmd);
+    }
 
     if (fclose(filePtr) != 0){
-        cleanUp(&argsArr, delim, &table);
+        cleanUp(&argsArr, delim, &table, cmd);
         return FileErr;
     }
 
-    cleanUp(&argsArr, delim, &table);
+    cleanUp(&argsArr, delim, &table, cmd);
     return result;
 }

@@ -5,4 +5,5 @@ case $1 in
 2) echo ArgErr;;
 3) echo AlocErr;;
 4) echo FileErr;;
+5) echo CmdErr;;
 esac
