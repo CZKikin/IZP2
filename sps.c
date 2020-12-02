@@ -68,6 +68,9 @@ void cleanUp(argsArray *a, char *delim, table *t, char *cmd);
 void DEBUGprintTable(table *t, char *delims);
 Status delCmdFromArgs(int index, argsArray *a);
 Status getCmd(char **dst, command *dstT, argsArray *a);
+void cleanCords(int *cords);
+Status pickCells(char *cmd, int *cords, int *cordsIndex);
+Status runCommand(char *cmd, int *cords, int cordsIndex);
 
 /* Code */
 char
@@ -395,10 +398,61 @@ getCmd(char **dst, command *dstT, argsArray *a){
 
     return result;
 }
+void
+cleanCords(int *cords){
+    for (int i=0; i<4; i++)
+        cords[i] = 0;
+}
+Status
+pickCells(char *cmd, int *cords, int *cordsIndex){
+    int len = strlen(cmd)+1;
+    cleanCords(cords);
+    *cordsIndex = 0;
+    //TODO: Check for min, max, find
+    for (int i = 0; i<len; i++){
+        if (*cordsIndex>3)
+            break;
+
+        if (cmd[i] == '-'){
+            cords[*cordsIndex] = -1;
+            *cordsIndex+=1;
+            continue;
+        } else if (cmd[i]>47 && cmd[i]<58) {
+            cords[*cordsIndex] = -1;
+            *cordsIndex+=1;
+        } 
+    }
+
+    if(*cordsIndex == 3)
+        return ArgErr;
+
+    if(*cordsIndex ==  4){
+        for (int i = 1; i<*cordsIndex-1; i++){
+            if(cords[i-1] > cords[i+1]){
+                dp("Argument: %d > %d, & that's bad\n", cords[i-1], cords[i+1]);
+                return ArgErr;
+            }
+        }
+    }
+    return Ok;
+}
+Status
+runCommand(char *cmd, int *cords, int cordsIndex){
+    char *argument = NULL;
+    (void)argument;
+    (void)cords;
+    (void)cmd;
+    (void)cordsIndex;
+    dp("Command & args: cmd=>%s, cordsIndex=>%d\n", cmd, cordsIndex);
+    //argument = checkCmdArgs(cmd);
+
+    return Ok;
+}
 int
 main(int argc, char **argv){
     char *delim = NULL; FILE *filePtr = NULL; 
-    char *cmd = NULL; command type;
+    char *cmd = NULL; command type; int cords[4];
+    int cordsIndex;
     Status result = UnexpectedErr;
     argsArray argsArr;
     table table;
@@ -429,6 +483,13 @@ main(int argc, char **argv){
     dp("Commands: %s\n", argsArr.array[0]);
     while ((result = getCmd(&cmd, &type, &argsArr)) != EndReached && result == Ok){
         dp("Chosen command: %s\n", cmd);
+
+        if(type == Command)
+            result = runCommand(cmd, cords, cordsIndex);
+        else
+            result = pickCells(cmd, &*cords, &cordsIndex);
+        if(result!=Ok)
+            break;
     }
 
     if (fclose(filePtr) != 0){
