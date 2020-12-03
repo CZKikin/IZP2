@@ -12,6 +12,7 @@
 
 #define CMDLEN (1001)
 #define CMDCOUNT (1000)
+#define NUM_OF_FN (16)
 
 /* Definitions */
 typedef enum {
@@ -69,10 +70,132 @@ void DEBUGprintTable(table *t, char *delims);
 Status delCmdFromArgs(int index, argsArray *a);
 Status getCmd(char **dst, command *dstT, argsArray *a);
 void cleanCords(int *cords);
-Status pickCells(char *cmd, int *cords, int *cordsIndex);
-Status runCommand(char *cmd, int *cords, int cordsIndex);
+Status pickCells(char *cmd, int *cords, int *cordsCount);
+Status runCommand(char *cmd, int *cords, int cordsCount);
+Status (*getFnPt())(char *cmd);
+
+Status irow(char *args, int *cords, int cordsCount);
+Status arow(char *args, int *cords, int cordsCount);
+Status drow(char *args, int *cords, int cordsCount);
+Status icol(char *args, int *cords, int cordsCount);
+Status acol(char *args, int *cords, int cordsCount);
+Status dcol(char *args, int *cords, int cordsCount);
+Status set(char *args, int *cords, int cordsCount);
+Status clear(char *args, int *cords, int cordsCount);
+Status swap(char *args, int *cords, int cordsCount);
+Status sum(char *args, int *cords, int cordsCount);
+Status count(char *args, int *cords, int cordsCount);
+Status len(char *args, int *cords, int cordsCount);
+Status def(char *args, int *cords, int cordsCount);
+Status use(char *args, int *cords, int cordsCount);
+Status inc(char *args, int *cords, int cordsCount);
 
 /* Code */
+Status
+irow(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+arow(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+drow(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+icol(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+acol(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+dcol(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+set(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+clear(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+swap(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+sum(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+count(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+len(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+def(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+use(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+inc(char *args, int *cords, int cordsCount){
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
 char
 isDelim(char ch, char *delims){
     for (size_t i=0; i<strlen(delims); i++){
@@ -209,7 +332,7 @@ getArgs(int count, char **args, argsArray *array, char **delim){
         switch(opt){
             case 'd':
                 //asprintf(delim, "%s", optarg); because school
-                *delim = realloc(*delim, (strlen(optarg)+1)*sizeof(char)); //IN CASE OF SEGFAULT VRAT strlen + 2 :)
+                *delim = realloc(*delim, (strlen(optarg)+1)*sizeof(char));
                 if (delim == NULL)
                     return AllocErr;   
 
@@ -324,11 +447,14 @@ DEBUGprintTable(table *t, char *delims){
     int row = 1;
     printf("TABLE START=======\n");
     for(int i=0; i<t->size; i++){
-        if(t->table[i].row>row){
+        printf("%s", t->table[i].data);
+        if (i == t->size-1)
+            break;
+        if (t->table[i+1].row>row){
             row++;
-            printf("%s\n",t->table[i].data);
+            printf("\n");
         } else {
-            printf("%s%s",t->table[i].data,delims);
+            printf("%c", delims[0]);
         }
     }
     printf("\nTABLE END========\n");
@@ -365,6 +491,9 @@ getCmd(char **dst, command *dstT, argsArray *a){
     char command[CMDLEN];
     int delIndex;
 
+    if (a->array[0][0] == '\0')
+        return EndReached;
+
     memset(command, 0, CMDLEN);
     free(*dst);
     *dst = NULL;
@@ -392,10 +521,7 @@ getCmd(char **dst, command *dstT, argsArray *a){
         *dstT = Select;
     else
         *dstT = Command;
-
-    if (a->array[0][0] == '\0')
-        result = EndReached;
-
+    
     return result;
 }
 void
@@ -404,55 +530,111 @@ cleanCords(int *cords){
         cords[i] = 0;
 }
 Status
-pickCells(char *cmd, int *cords, int *cordsIndex){
+pickCells(char *cmd, int *cords, int *cordsCount){
     int len = strlen(cmd)+1;
     cleanCords(cords);
-    *cordsIndex = 0;
+    *cordsCount = 0;
+    char *buf = NULL;
+    buf = realloc(buf, CMDLEN*sizeof(char));
+    memset(buf, 0, CMDLEN*sizeof(char));
+
+
     //TODO: Check for min, max, find
     for (int i = 0; i<len; i++){
-        if (*cordsIndex>3)
+        if (*cordsCount>3)
             break;
 
         if (cmd[i] == '-'){
-            cords[*cordsIndex] = -1;
-            *cordsIndex+=1;
+            cords[*cordsCount] = -1;
+            *cordsCount+=1;
             continue;
         } else if (cmd[i]>47 && cmd[i]<58) {
-            cords[*cordsIndex] = -1;
-            *cordsIndex+=1;
+            strncat(buf, &cmd[i], 1);
+            if(cmd[i+1]>47 && cmd[i+1]<58){
+                continue;
+            }
+
+            cords[*cordsCount] = atoi(buf);
+            *cordsCount+=1;
+            memset(buf, 0, CMDLEN*sizeof(char));
         } 
     }
 
-    if(*cordsIndex == 3)
+    free(buf);
+    buf = NULL;
+
+    if(*cordsCount == 3)
         return ArgErr;
 
-    if(*cordsIndex ==  4){
-        for (int i = 1; i<*cordsIndex-1; i++){
+    if(*cordsCount ==  4){
+        for (int i = 1; i<*cordsCount-1; i++){
             if(cords[i-1] > cords[i+1]){
-                dp("Argument: %d > %d, & that's bad\n", cords[i-1], cords[i+1]);
+                dp("Arguments: cord1: %d > cord2: %d, & that's bad\n", cords[i-1], cords[i+1]);
                 return ArgErr;
             }
         }
     }
     return Ok;
 }
-Status
-runCommand(char *cmd, int *cords, int cordsIndex){
-    char *argument = NULL;
-    (void)argument;
-    (void)cords;
-    (void)cmd;
-    (void)cordsIndex;
-    dp("Command & args: cmd=>%s, cordsIndex=>%d\n", cmd, cordsIndex);
-    //argument = checkCmdArgs(cmd);
+char* 
+checkCmdArgs(char *cmd){
+    int index;
+    char *arg = NULL;
+    for (int i = 0; i<(int)strlen(cmd)+1; i++){
+        if(isDelim(cmd[i], " "))
+                index = ++i;
+    }
+    //hen tu by sa taky hodil asprintf :)
 
-    return Ok;
+    if (cmd[index] == '\0')
+        return NULL;
+
+    arg = malloc(strlen(&cmd[index]+1)); 
+    snprintf(arg, strlen(&cmd[index])+1, "%s", &cmd[index]);
+
+    cmd[index-1] = '\0';
+    cmd = realloc(cmd, strlen(cmd)+1);
+
+    return arg;
+}
+Status
+runCommand(char *cmd, int *cords, int cordsCount){
+    Status result = UnexpectedErr;
+    char *argument = NULL;
+    Status (*function)() = NULL;
+
+    argument = checkCmdArgs(cmd);
+
+    function = getFnPt(cmd);
+    if(function == NULL){
+        dp("Invalid function cmd=> %s", cmd);
+        free(argument);
+        return ArgErr;
+    }
+
+    dp("Command & args: cmd=>%s, cordsCount=>%d, argument=> %s\n", cmd, cordsCount, argument);
+    result = function(argument, cords, cordsCount);
+
+    free(argument);
+    return result;
+}
+Status
+(*getFnPt(char *cmd))(){
+    //Globální proměnné jsou špatné, tak to je tady no :)
+    char fnStr[NUM_OF_FN][6]={"irow", "arow", "drow", "icol", "acol", "dcol", "set", "clear", "swap", "sum", "count", "len", "def", "use", "inc"};
+    Status (*fns[NUM_OF_FN])()={irow, arow, drow, icol, acol, dcol, set, clear, swap, sum, count, len, def, use, inc};
+
+    for (int i=0; i<NUM_OF_FN; i++){
+        if (strcmp(cmd, fnStr[i]) == 0)
+            return fns[i];
+    }
+    return NULL;
 }
 int
 main(int argc, char **argv){
     char *delim = NULL; FILE *filePtr = NULL; 
     char *cmd = NULL; command type; int cords[4];
-    int cordsIndex;
+    int cordsCount;
     Status result = UnexpectedErr;
     argsArray argsArr;
     table table;
@@ -485,12 +667,14 @@ main(int argc, char **argv){
         dp("Chosen command: %s\n", cmd);
 
         if(type == Command)
-            result = runCommand(cmd, cords, cordsIndex);
+            result = runCommand(cmd, cords, cordsCount);
         else
-            result = pickCells(cmd, &*cords, &cordsIndex);
+            result = pickCells(cmd, &*cords, &cordsCount);
         if(result!=Ok)
             break;
     }
+    if(result == EndReached)
+        result = Ok;
 
     if (fclose(filePtr) != 0){
         cleanUp(&argsArr, delim, &table, cmd);
