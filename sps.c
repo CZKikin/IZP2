@@ -71,29 +71,30 @@ Status delCmdFromArgs(int index, argsArray *a);
 Status getCmd(char **dst, command *dstT, argsArray *a);
 void cleanCords(int *cords);
 Status pickCells(char *cmd, int *cords, int *cordsCount);
-Status runCommand(char *cmd, int *cords, int cordsCount);
+Status runCommand(table *t, char *cmd, int *cords, int cordsCount);
 Status (*getFnPt())(char *cmd);
 
-Status irow(char *args, int *cords, int cordsCount);
-Status arow(char *args, int *cords, int cordsCount);
-Status drow(char *args, int *cords, int cordsCount);
-Status icol(char *args, int *cords, int cordsCount);
-Status acol(char *args, int *cords, int cordsCount);
-Status dcol(char *args, int *cords, int cordsCount);
-Status set(char *args, int *cords, int cordsCount);
-Status clear(char *args, int *cords, int cordsCount);
-Status swap(char *args, int *cords, int cordsCount);
-Status sum(char *args, int *cords, int cordsCount);
-Status avg(char *args, int *cords, int cordsCount);
-Status count(char *args, int *cords, int cordsCount);
-Status len(char *args, int *cords, int cordsCount);
-Status def(char *args, int *cords, int cordsCount);
-Status use(char *args, int *cords, int cordsCount);
-Status inc(char *args, int *cords, int cordsCount);
+Status irow(table *t, char *args, int *cords, int cordsCount);
+Status arow(table *t, char *args, int *cords, int cordsCount);
+Status drow(table *t, char *args, int *cords, int cordsCount);
+Status icol(table *t, char *args, int *cords, int cordsCount);
+Status acol(table *t, char *args, int *cords, int cordsCount);
+Status dcol(table *t, char *args, int *cords, int cordsCount);
+Status set(table *t, char *args, int *cords, int cordsCount);
+Status clear(table *t, char *args, int *cords, int cordsCount);
+Status swap(table *t, char *args, int *cords, int cordsCount);
+Status sum(table *t, char *args, int *cords, int cordsCount);
+Status avg(table *t, char *args, int *cords, int cordsCount);
+Status count(table *t, char *args, int *cords, int cordsCount);
+Status len(table *t, char *args, int *cords, int cordsCount);
+Status def(table *t, char *args, int *cords, int cordsCount);
+Status use(table *t, char *args, int *cords, int cordsCount);
+Status inc(table *t, char *args, int *cords, int cordsCount);
 
 /* Code */
 Status
-irow(char *args, int *cords, int cordsCount){
+irow(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Irow with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -101,7 +102,8 @@ irow(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-arow(char *args, int *cords, int cordsCount){
+arow(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Arow with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -109,7 +111,8 @@ arow(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-drow(char *args, int *cords, int cordsCount){
+drow(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Drow with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -117,7 +120,8 @@ drow(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-icol(char *args, int *cords, int cordsCount){
+icol(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Icol with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -125,7 +129,8 @@ icol(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-acol(char *args, int *cords, int cordsCount){
+acol(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Acol with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -133,7 +138,8 @@ acol(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-dcol(char *args, int *cords, int cordsCount){
+dcol(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Dcol with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -141,7 +147,8 @@ dcol(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-set(char *args, int *cords, int cordsCount){
+set(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Set with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -149,7 +156,8 @@ set(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-clear(char *args, int *cords, int cordsCount){
+clear(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Clear with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -157,7 +165,8 @@ clear(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-swap(char *args, int *cords, int cordsCount){
+swap(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Swap with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -165,7 +174,8 @@ swap(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-sum(char *args, int *cords, int cordsCount){
+sum(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Sum with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -173,7 +183,8 @@ sum(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-avg(char *args, int *cords, int cordsCount){
+avg(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Avg with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -181,7 +192,8 @@ avg(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-count(char *args, int *cords, int cordsCount){
+count(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Count with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -189,7 +201,8 @@ count(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-len(char *args, int *cords, int cordsCount){
+len(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Len with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -197,7 +210,8 @@ len(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-def(char *args, int *cords, int cordsCount){
+def(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Def with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -205,7 +219,8 @@ def(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-use(char *args, int *cords, int cordsCount){
+use(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Use with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -213,7 +228,8 @@ use(char *args, int *cords, int cordsCount){
     return Ok;
 }
 Status
-inc(char *args, int *cords, int cordsCount){
+inc(table *t, char *args, int *cords, int cordsCount){
+    (void)t;
     dp("Running: Inc with args=>%s\n", args);
     (void)args;
     (void)cords;
@@ -626,7 +642,7 @@ checkCmdArgs(char *cmd){
     return arg;
 }
 Status
-runCommand(char *cmd, int *cords, int cordsCount){
+runCommand(table *t, char *cmd, int *cords, int cordsCount){
     Status result = UnexpectedErr;
     char *argument = NULL;
     Status (*function)() = NULL;
@@ -641,7 +657,7 @@ runCommand(char *cmd, int *cords, int cordsCount){
     }
 
     dp("Command & args: cmd=>%s, cordsCount=>%d, argument=> %s\n", cmd, cordsCount, argument);
-    result = function(argument, cords, cordsCount);
+    result = function(t, argument, cords, cordsCount);
 
     free(argument);
     argument = NULL;
@@ -696,7 +712,7 @@ main(int argc, char **argv){
         dp("Chosen command: %s\n", cmd);
 
         if(type == Command)
-            result = runCommand(cmd, cords, cordsCount);
+            result = runCommand(&table, cmd, cords, cordsCount);
         else
             result = pickCells(cmd, &*cords, &cordsCount);
 
