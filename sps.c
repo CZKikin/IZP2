@@ -84,6 +84,7 @@ Status set(char *args, int *cords, int cordsCount);
 Status clear(char *args, int *cords, int cordsCount);
 Status swap(char *args, int *cords, int cordsCount);
 Status sum(char *args, int *cords, int cordsCount);
+Status avg(char *args, int *cords, int cordsCount);
 Status count(char *args, int *cords, int cordsCount);
 Status len(char *args, int *cords, int cordsCount);
 Status def(char *args, int *cords, int cordsCount);
@@ -93,6 +94,7 @@ Status inc(char *args, int *cords, int cordsCount);
 /* Code */
 Status
 irow(char *args, int *cords, int cordsCount){
+    dp("Running: Irow with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -100,6 +102,7 @@ irow(char *args, int *cords, int cordsCount){
 }
 Status
 arow(char *args, int *cords, int cordsCount){
+    dp("Running: Arow with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -107,6 +110,7 @@ arow(char *args, int *cords, int cordsCount){
 }
 Status
 drow(char *args, int *cords, int cordsCount){
+    dp("Running: Drow with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -114,6 +118,7 @@ drow(char *args, int *cords, int cordsCount){
 }
 Status
 icol(char *args, int *cords, int cordsCount){
+    dp("Running: Icol with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -121,6 +126,7 @@ icol(char *args, int *cords, int cordsCount){
 }
 Status
 acol(char *args, int *cords, int cordsCount){
+    dp("Running: Acol with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -128,6 +134,7 @@ acol(char *args, int *cords, int cordsCount){
 }
 Status
 dcol(char *args, int *cords, int cordsCount){
+    dp("Running: Dcol with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -135,6 +142,7 @@ dcol(char *args, int *cords, int cordsCount){
 }
 Status
 set(char *args, int *cords, int cordsCount){
+    dp("Running: Set with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -142,6 +150,7 @@ set(char *args, int *cords, int cordsCount){
 }
 Status
 clear(char *args, int *cords, int cordsCount){
+    dp("Running: Clear with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -149,6 +158,7 @@ clear(char *args, int *cords, int cordsCount){
 }
 Status
 swap(char *args, int *cords, int cordsCount){
+    dp("Running: Swap with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -156,6 +166,15 @@ swap(char *args, int *cords, int cordsCount){
 }
 Status
 sum(char *args, int *cords, int cordsCount){
+    dp("Running: Sum with args=>%s\n", args);
+    (void)args;
+    (void)cords;
+    (void)cordsCount;
+    return Ok;
+}
+Status
+avg(char *args, int *cords, int cordsCount){
+    dp("Running: Avg with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -163,6 +182,7 @@ sum(char *args, int *cords, int cordsCount){
 }
 Status
 count(char *args, int *cords, int cordsCount){
+    dp("Running: Count with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -170,6 +190,7 @@ count(char *args, int *cords, int cordsCount){
 }
 Status
 len(char *args, int *cords, int cordsCount){
+    dp("Running: Len with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -177,6 +198,7 @@ len(char *args, int *cords, int cordsCount){
 }
 Status
 def(char *args, int *cords, int cordsCount){
+    dp("Running: Def with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -184,6 +206,7 @@ def(char *args, int *cords, int cordsCount){
 }
 Status
 use(char *args, int *cords, int cordsCount){
+    dp("Running: Use with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -191,6 +214,7 @@ use(char *args, int *cords, int cordsCount){
 }
 Status
 inc(char *args, int *cords, int cordsCount){
+    dp("Running: Inc with args=>%s\n", args);
     (void)args;
     (void)cords;
     (void)cordsCount;
@@ -563,12 +587,14 @@ pickCells(char *cmd, int *cords, int *cordsCount){
     free(buf);
     buf = NULL;
 
-    if(*cordsCount == 3)
+    if (*cordsCount == 3)
         return ArgErr;
 
-    if(*cordsCount ==  4){
+    if (*cordsCount ==  4){
         for (int i = 1; i<*cordsCount-1; i++){
-            if(cords[i-1] > cords[i+1]){
+            if (cords[i-1] > cords[i+1]){
+                if (cords[i+1] == -1)
+                    continue;
                 dp("Arguments: cord1: %d > cord2: %d, & that's bad\n", cords[i-1], cords[i+1]);
                 return ArgErr;
             }
@@ -624,8 +650,8 @@ runCommand(char *cmd, int *cords, int cordsCount){
 Status
 (*getFnPt(char *cmd))(){
     //Globální proměnné jsou špatné, tak to je tady no :)
-    char fnStr[NUM_OF_FN][6]={"irow", "arow", "drow", "icol", "acol", "dcol", "set", "clear", "swap", "sum", "count", "len", "def", "use", "inc"};
-    Status (*fns[NUM_OF_FN])()={irow, arow, drow, icol, acol, dcol, set, clear, swap, sum, count, len, def, use, inc};
+    char fnStr[NUM_OF_FN][6]={"irow", "arow", "drow", "icol", "acol", "dcol", "set", "clear", "swap", "sum", "avg", "count", "len", "def", "use", "inc"};
+    Status (*fns[NUM_OF_FN])()={irow, arow, drow, icol, acol, dcol, set, clear, swap, sum, avg, count, len, def, use, inc};
 
     for (int i=0; i<NUM_OF_FN; i++){
         if (strcmp(cmd, fnStr[i]) == 0)
