@@ -578,15 +578,17 @@ pickCells(char *cmd, int *cords, int *cordsCount){
 }
 char* 
 checkCmdArgs(char *cmd){
-    int index;
+    int index = 0;
     char *arg = NULL;
     for (int i = 0; i<(int)strlen(cmd)+1; i++){
-        if(isDelim(cmd[i], " "))
+        if(isDelim(cmd[i], " ")){
                 index = ++i;
+                break;
+        }
     }
     //hen tu by sa taky hodil asprintf :)
 
-    if (cmd[index] == '\0')
+    if (index == 0)
         return NULL;
 
     arg = malloc(strlen(&cmd[index]+1)); 
@@ -616,6 +618,7 @@ runCommand(char *cmd, int *cords, int cordsCount){
     result = function(argument, cords, cordsCount);
 
     free(argument);
+    argument = NULL;
     return result;
 }
 Status
@@ -670,6 +673,9 @@ main(int argc, char **argv){
             result = runCommand(cmd, cords, cordsCount);
         else
             result = pickCells(cmd, &*cords, &cordsCount);
+
+        free(cmd);
+        cmd = NULL;
         if(result!=Ok)
             break;
     }
