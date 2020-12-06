@@ -73,6 +73,10 @@ void cleanCords(int *cords);
 Status pickCells(char *cmd, int *cords, int *cordsCount);
 Status runCommand(table *t, char *cmd, int *cords, int cordsCount);
 Status (*getFnPt())(char *cmd);
+Status setupCell(cell *c, int col, int row);
+int getRows(table *t);
+void sortTable(table *t);
+void insertRow(table *t, row);
 
 Status irow(table *t, char *args, int *cords, int cordsCount);
 Status arow(table *t, char *args, int *cords, int cordsCount);
@@ -94,11 +98,39 @@ Status inc(table *t, char *args, int *cords, int cordsCount);
 /* Code */
 Status
 irow(table *t, char *args, int *cords, int cordsCount){
-    (void)t;
-    dp("Running: Irow with args=>%s\n", args);
     (void)args;
-    (void)cords;
-    (void)cordsCount;
+    int top = 1; int bot = 1;
+    int row = 1; char doneFlag = 0;
+    cell c;
+    dp("Running: Irow with args=>%s\n", args);
+    switch (cordsCount){
+        case 1:
+            top = bot = cords[0];
+            break;
+        case 2:
+        case 4:
+            top = cords[0];
+            bot = cords[1];
+            break;
+    }
+
+    if (top == -1)
+        top = 1;
+    if (bot == -1)
+        bot = getRows(t);
+
+    for (int i=0; i<t->size; i++){
+        if (t->table[i].row > row){
+            row++;
+            doneFlag=1;
+        }
+        
+        if (t->table[i].row>=top && t->table[i].row<=bot)
+            if (!doneFlag)
+                insertRow(*t, row); //doimplementovat ze dostanu radek, vlozim a automaticky pak posunu vse o jedno dal
+        
+    }
+    sortTable(t);
     return Ok;
 }
 Status
@@ -676,6 +708,42 @@ Status
     return NULL;
 }
 int
+getRows(table *t){
+    int rows = 1;
+    for (int i = 0; i<t->size; i++)
+        if (t->table[i].row>rows)
+            rows = t->table[i].row;
+    return rows;
+}
+void
+sortTable(table *t){
+    cell c;
+    initCell(&c);
+
+    for (int i = 0; i<t->size; i++){
+        for (int j = 1; j<t->size; j++){
+            if(t->table[i].row<t->table[j].row){
+                c=t->table[i];
+                t->table[i] = t->table[j];
+                t->table[j] = c;
+            }
+        }
+    }
+
+    for (int i = 0; i<t->size; i++){
+        for (int j = 1; j<t->size; j++){
+            if(t->table[i].row == t->table[j].row){
+                if(t->table[i].col<t->table[j].col){
+                    c=t->table[i];
+                    t->table[i] = t->table[j];
+                    t->table[j] = c;
+                }
+            }
+        }
+    }
+    delCell(&c);
+}
+int
 main(int argc, char **argv){
     char *delim = NULL; FILE *filePtr = NULL; 
     char *cmd = NULL; command type; int cords[4];
@@ -728,6 +796,8 @@ main(int argc, char **argv){
         cleanUp(&argsArr, delim, &table, cmd);
         return FileErr;
     }
+
+    DEBUGprintTable(&table, delim); 
 
     cleanUp(&argsArr, delim, &table, cmd);
     return result;
