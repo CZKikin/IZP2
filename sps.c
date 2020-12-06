@@ -75,8 +75,8 @@ Status runCommand(table *t, char *cmd, int *cords, int cordsCount);
 Status (*getFnPt())(char *cmd);
 Status setupCell(cell *c, int col, int row);
 int getRows(table *t);
-void sortTable(table *t);
-void insertRow(table *t, row);
+void insertRow(table *t, int row);
+void printErr(Status s);
 
 Status irow(table *t, char *args, int *cords, int cordsCount);
 Status arow(table *t, char *args, int *cords, int cordsCount);
@@ -101,7 +101,6 @@ irow(table *t, char *args, int *cords, int cordsCount){
     (void)args;
     int top = 1; int bot = 1;
     int row = 1; char doneFlag = 0;
-    cell c;
     dp("Running: Irow with args=>%s\n", args);
     switch (cordsCount){
         case 1:
@@ -119,18 +118,25 @@ irow(table *t, char *args, int *cords, int cordsCount){
     if (bot == -1)
         bot = getRows(t);
 
+    if (top < 1 || bot > getRows(t))
+        return CmdErr;
+
     for (int i=0; i<t->size; i++){
         if (t->table[i].row > row){
             row++;
-            doneFlag=1;
+            doneFlag=0;
         }
         
-        if (t->table[i].row>=top && t->table[i].row<=bot)
-            if (!doneFlag)
-                insertRow(*t, row); //doimplementovat ze dostanu radek, vlozim a automaticky pak posunu vse o jedno dal
+        if (t->table[i].row>=top && t->table[i].row<=bot){
+            if (!doneFlag){
+                insertRow(t, row);
+                row++;
+                bot++;
+                doneFlag=1;
+            }
+        }
         
     }
-    sortTable(t);
     return Ok;
 }
 Status
@@ -716,32 +722,44 @@ getRows(table *t){
     return rows;
 }
 void
-sortTable(table *t){
+insertRow(table *t, int row){
     cell c;
-    initCell(&c);
-
-    for (int i = 0; i<t->size; i++){
-        for (int j = 1; j<t->size; j++){
-            if(t->table[i].row<t->table[j].row){
-                c=t->table[i];
-                t->table[i] = t->table[j];
-                t->table[j] = c;
-            }
+    int firstFindIndex = -1;
+    setupCell(&c, 1, row);
+    for (int i=0; i<t->size; i++){
+        if(t->table[i].row >= row){
+            if (firstFindIndex == -1)
+                firstFindIndex = i;
+            t->table[i].row++;
         }
     }
-
-    for (int i = 0; i<t->size; i++){
-        for (int j = 1; j<t->size; j++){
-            if(t->table[i].row == t->table[j].row){
-                if(t->table[i].col<t->table[j].col){
-                    c=t->table[i];
-                    t->table[i] = t->table[j];
-                    t->table[j] = c;
-                }
-            }
-        }
+    insToTable(t, &c);
+    for (int i=t->size-1; i>firstFindIndex; i--){
+        t->table[i] = t->table[i-1];
     }
-    delCell(&c);
+    t->table[firstFindIndex] = c;
+}
+void
+printErr(Status s){
+    switch(s){
+        case UnexpectedErr:
+            printf("Program has ended with Unexpected Error!!\n\r");
+            break;
+        case ArgErr:
+            printf("Program has ended with Argument Error, check your input!\n\r");
+            break;
+        case AllocErr:
+            printf("Program has ended with Allocation Error!\n\r");
+            break;
+        case FileErr:
+            printf("Program has ended with File Error, does the file exist?\n\r");
+            break;
+        case CmdErr:
+            printf("Program has ended with Command Error, check your input!\n\r");
+            break;
+        default:
+            break;
+    }
 }
 int
 main(int argc, char **argv){
@@ -800,5 +818,7 @@ main(int argc, char **argv){
     DEBUGprintTable(&table, delim); 
 
     cleanUp(&argsArr, delim, &table, cmd);
+    if (result != Ok)
+        printErr(result);
     return result;
 }
