@@ -1,5 +1,5 @@
 # IZP2
- Second IZP project
+ Second IZP project - Not finished. Reason: No time because of college.
 
 ## Cell selection commands
 - [R,C] - Cell on row R and column C 
